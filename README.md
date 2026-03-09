@@ -139,7 +139,7 @@ Skills:
 
 Statistical Analysis, Benchmark Analysis, Time-Series Analysis, Machine Learning, Predictive Analytics, Model Performance Evaluation, Exploratory Data Analysis (EDA), Trend Analysis, Power BI/Tableau), Dashboard Development, Data Visualization
 
-Project 4 : 
+Project 4
 
 Press conference on the release of the GDP Data : base year 2022 – 2023 
 
