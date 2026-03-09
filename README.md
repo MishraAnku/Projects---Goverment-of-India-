@@ -186,5 +186,7 @@ Skills:
 
 Large-scale data integration, Data Management, Supervised machine learning forecasting, Model accuracy evaluation & improvement, Predictive analytics.
 
+"To download the project files, please use the download option available on the respective project page on GitHub."
+
                                                          *****
                                                          
