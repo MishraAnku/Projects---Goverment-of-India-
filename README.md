@@ -147,7 +147,9 @@ Press conference on the release of the GDP Data : base year 2022 – 2023
 
 🏛️ Project Context
 
-This project supported the official GDP data release by Government of India's MoSPI — a high-stakes, time-bound statistical reporting cycle.
+This project supported the official GDP data release process for the Ministry of Statistics and Programme Implementation (MoSPI), Government of India. It involved end-to-end national accounts data processing, sector-wise GVA analysis, forecasting, and automated reporting aligned with the GDP press release cycle based on the new base year (2022–23).
+
+The objective was to improve the speed, accuracy, and reliability of GDP advance estimates and reduce manual dependency in a highly time-sensitive reporting environment.
 
 Step-by-Step Execution
 
@@ -215,7 +217,42 @@ Achievement | How It Was Done
 | 50% less manual effort | SQL automation + scheduled BI refresh |
 | Accurate sector GVA reporting | Normalized SQL schema + stored procedures |
 | Press-ready dashboards | Tableau + Power BI with DirectQuery |
+| Enabled faster and more reliable sector-wise GVA reporting across 8 major sectors|
 
+Skills Used / Gained
+
+Data Engineering & Databases
+
+•	SQL (complex joins, stored procedures, ETL pipelines)
+•	Data modeling & normalization
+
+Analytics & Forecasting
+
+•	Time series forecasting (ARIMA, SARIMA)
+•	Trend and growth rate analysis
+
+Visualization & BI Tools
+
+•	Power BI (DAX, DirectQuery, role-level security, scheduled refresh)
+•	Tableau (waterfalls, heatmaps, trend analysis dashboards)
+Programming & Automation
+
+Domain Skills
+
+•	National Accounts (GDP, GVA, base year revision methodology)
+•	Economic indicators interpretation and reporting
+
+Key Challenges Faced
+
+•	Handling large-scale, multi-source government datasets with inconsistencies
+•	Ensuring data accuracy under strict press release deadlines
+•	Aligning multiple systems (SQL, Python outputs, Power BI, printed reports)
+•	Working with base year revision complexities (2022–23 rebasing impact)
+•	Dealing with missing or delayed sector-wise submissions from different sources
+
+Challenges Overcome
+
+•	Introduced forecasting models (ARIMA/SARIMA) to bridge data gaps in early estimates
 
 
                                                          *****
