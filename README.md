@@ -143,50 +143,80 @@ Statistical Analysis, Benchmark Analysis, Time-Series Analysis, Machine Learning
 
 Project 4
 
-Press conference on the release of the GDP Data : base year 2022 – 2023 
+Press conference on the release of the GDP Data : base year 2022 – 2023
 
-Advanced Data Analytics Contributions to the GDP Release
+🏛️ Project Context
 
-1. Large-Scale Baseline Data Engineering (2022–23 Base Year)
+This project supported the official GDP data release by Government of India's MoSPI — a high-stakes, time-bound statistical reporting cycle.
 
-Integrated 1.5+ million structured and unstructured records spanning National Accounts, enterprise surveys, GST-based industrial filings, and household consumption microdata.
-Built automated ETL pipelines with rule-based validation and anomaly detection, reducing manual reconciliation errors by 18%.
-Implemented cross-dataset entity resolution and deduplication frameworks to enhance consistency across sectoral estimates.
+Step-by-Step Execution
 
-2. Sectoral Growth Modeling & Real-Time Signal Integration
+Step 1: Data Ingestion & SQL Database Setup
 
-Applied time-series decomposition and seasonal adjustment techniques to derive accurate YoY sectoral growth trends.
-Agriculture analytics leveraged crop-yield modeling, satellite proxy indicators, and mandi-level price integration — reflecting a 3.8% YoY growth with higher estimation robustness.
-Manufacturing analytics incorporated high-frequency factory output proxies and industrial production indicators, capturing a 6.2% growth trajectory through dashboard-based monitoring.
-Reduced sectoral estimation lag through automated indicator ingestion and nowcasting techniques.
+- Collected raw national accounts data from **CSO (Central Statistics Office)** feeds, state-level GVA submissions, and sector-wise activity data
+- Designed a normalized SQL schema with tables for:
+  - `gdp_estimates` (advance, first revised, second revised, final)
+  - `gva_sector` (Agriculture, Industry, Services breakdown)
+  - `base_year_deflators` (price indices for 2022-23 base)
+- Developed SQL-based data pipelines to clean, validate, and load quarterly/annual national accounts data
+Built data quality checks to flag missing values, outliers, and revision flags across GDP estimate cycles
 
-3. Granular Regional Disaggregation & Spatial Analytics
+Step 2: Sector-wise GVA Reporting
 
-Expanded district-level economic data coverage from 82% to 95%, improving bottom-up aggregation accuracy.
-Applied spatial normalization models to reconcile regional data gaps.
-Conducted contribution analysis revealing that 5 states accounted for 62% of incremental national GDP growth, enabling sharper fiscal and policy targeting.
+- Wrote complex SQL queries joining sector tables to produce sector GVA breakdowns:
+  - Agriculture & Allied Activities
+  - Mining & Quarrying
+  - Manufacturing
+  - Electricity, Gas, Water Supply
+  - Construction
+  - Trade, Hotels, Transport
+  - Financial, Real Estate Services
+  - Public Administration & Defence
+- Created **stored procedures** for automated quarterly GVA aggregation
+- Validated against RBI and Ministry source data for consistency
 
-4. Digital Data Collection & Inclusive Analytics
+Step 3: ARIMA-Based Forecasting Model
 
-Deployed mobile-enabled survey instruments with embedded validation logic, increasing rural household participation by 27%.
-Integrated gender-disaggregated enterprise datasets, estimating women-led enterprises’ GDP contribution at ₹1.2 trillion, marking a 15% YoY rise.
-Strengthened representation of informal and micro-enterprise segments using structured digital capture mechanisms.
+- Used historical GDP time series (2011-12 base → rebased to 2022-23)
+- Steps within modelling:
+  - Stationarity testing** — ADF test to check unit roots
+  - ACF/PACF plots — to identify AR and MA order parameters
+  - Fitted ARIMA(p,d,q) models, tuned via AIC/BIC minimization
+  - Generated advance GDP estimates** (AE1, AE2) 6–9 months ahead of actuals
+  - Added seasonal decomposition (SARIMA) for quarterly patterns
+- This directly contributed to the 30–40% improvement in advance estimate readiness by producing reliable early forecasts before actual data collection was complete
 
-5. Predictive Modeling & Scenario Intelligence
+Step 4: Tableau & Power BI Dashboard Development
 
-Built supervised machine learning forecasting models improving GDP growth prediction accuracy from 85% to 92%.
-Implemented scenario-based macro simulations (e.g., energy price volatility, supply-chain shocks) generating three alternative growth pathways for evidence-based policymaking.
-Enabled early-warning economic indicators through leading-variable correlation modeling.
+Tableau Dashboards:
+- GDP Growth Rate trend lines (quarterly YoY and QoQ)
+- Sector contribution waterfall charts
+- State-wise GVA heat maps
+- Revision analysis — AE vs First Revised vs Final Estimates
 
-6. Data Democratization & Public Analytics Platforms
+Power BI Dashboards:
+- Connected live to SQL database via DirectQuery
+- Built DAX measures for real growth rate calculations (nominal → real using deflators)
+- Role-level security for internal MoSPI vs. press release views
+- Automated scheduled refresh before each press conference
 
-Developed interactive, API-enabled dashboards with drill-down capabilities across sectors and states.
-Achieved 250,000+ dashboard interactions within the first week, reflecting enhanced public data accessibility.
-Data storytelling through visual analytics and social media threads increased digital engagement by 34% YoY.
+Step 5: Automating the Press Release Workflow
 
-Skills:
+- Replaced manual Excel-based compilation with SQL → Python → PowerPoint/PDF pipelines
+- Auto-generated press release tables and charts with latest data
+- Built validation dashboards to cross-check estimates before release
+- This cut manual reporting effort by 50% — a significant win given the 27 Feb 4:30 PM hard deadline visible on the poster
 
-Large-scale data integration, Data Management, Supervised machine learning forecasting, Model accuracy evaluation & improvement, Predictive analytics.
+📊 Key Outcomes Summary
+
+Achievement | How It Was Done 
+
+| 30–40% faster advance estimates | ARIMA forecasting replacing manual projection |
+| 50% less manual effort | SQL automation + scheduled BI refresh |
+| Accurate sector GVA reporting | Normalized SQL schema + stored procedures |
+| Press-ready dashboards | Tableau + Power BI with DirectQuery |
+
+
 
                                                          *****
                                                          
