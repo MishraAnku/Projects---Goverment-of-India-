@@ -184,18 +184,6 @@ How did you handle structured and semi-structured data?
 
 Structured data was processed using SQL pipelines, while semi-structured data (like logs or metadata) was processed using Python (Pandas) with parsing and normalization steps.
 
-Data Processing & Optimization
-
-how did you reduce processing time by 41%?
-
-Through:
-
-* Query optimization in SQL
-* Removing redundant computations
-* Parallelizing data processing tasks
-* Caching intermediate results
-* Automating repetitive transformations
-
 Why did reporting reduce from 10 days to 3 days?
 
 Because we:
@@ -364,10 +352,6 @@ What if GST data becomes unavailable?
 
 The model would fallback to other proxies like digital payments and vehicle registrations, but accuracy would reduce temporarily.
 
-How do you validate your 41% improvement claim?
-
-By comparing baseline pipeline execution time vs optimized pipeline execution time using logs and performance metrics.
-                                           
 # Project Understanding
 
 1. What was the objective of this project?
