@@ -1961,192 +1961,378 @@ joblib.dump(model, 'model.pkl')
 
 # Project 4 : Press conference on the release of the GDP Data : base year 2022 – 2023 
 
-Aim of the project
+Step 1: SQL Data Extraction from NAS
+
+SELECT
+    year,
+    quarter,
+    sector_code,
+    sector_name,
+    gva_current_prices,
+    gdp_current_prices
+FROM nas_gdp_statistics
+WHERE year >= '2022-23';
+
+Step 2: SQL Data Extraction from GST
+
+SELECT
+    filing_period,
+    state_code,
+    industry_code,
+    taxable_value,
+    cgst_amount,
+    sgst_amount,
+    igst_amount
+FROM gst_transactions
+WHERE filing_period >= '2022-04';
+
+Step 3: SQL Data Extraction from ASI
+
+SELECT
+    survey_year,
+    state_code,
+    nic_code,
+    total_output,
+    intermediate_consumption,
+    gross_value_added
+FROM asi_industries
+WHERE survey_year >= 2022;
 
-The aim of this project is to design and implement an end to end GDP estimation and forecasting pipeline for India using a base year of 2022–23 by integrating multiple macroeconomic datasets and applying statistical and machine learning techniques to generate reliable GDP estimates and forecasts aligned with the methodology of the Ministry of Statistics and Programme Implementation Ministry of Statistics and Programme Implementation
+Step 4: SQL Data Extraction from HCES
 
-Purpose
+SELECT
+    survey_year,
+    state_code,
+    sector,
+    expenditure_category,
+    monthly_consumption_expenditure
+FROM hces_household_expenditure;
+
+Step 5: SQL Data Extraction from CPI
+
+SELECT
+    reference_month,
+    state_code,
+    commodity_group,
+    cpi_index,
+    inflation_rate
+FROM cpi_statistics
+WHERE reference_month >= '2022-04';
+
+Step 6: Load Data into Python
+
+import pandas as pd
+
+nas = pd.read_csv("nas.csv")
+gst = pd.read_csv("gst.csv")
+asi = pd.read_csv("asi.csv")
+hces = pd.read_csv("hces.csv")
+cpi = pd.read_csv("cpi.csv")
+
+Step 7: Data Profiling/ EDA/ data understanding
+
+print(nas.shape)
+print(nas.info())
 
-The purpose of the project is to consolidate diverse economic indicators such as national accounts, GST transactions, industrial production, inflation indices, trade data, household consumption, and labour market statistics into a unified analytical framework that supports GDP estimation, economic monitoring, and forward looking forecasting for policy and research use
+print(gst.shape)
+print(gst.info())
+
+print(asi.shape)
+print(asi.info())
+
+print(hces.shape)
+print(hces.info())
+
+print(cpi.shape)
+print(cpi.info())
+Step 8: Missing Value Analysis/ individual ran code for datasets
+print(nas.isnull().sum())
+print(gst.isnull().sum())
+print(asi.isnull().sum())
+print(hces.isnull().sum())
+print(cpi.isnull().sum())
 
-Challenges faced
+Step 9: Missing Value Treatment – ran code for all datasets 
 
-The major challenges included integrating heterogeneous datasets with different frequencies such as monthly quarterly and annual data, handling missing values and inconsistencies across sources, aligning different classification systems like industry codes and sector definitions, managing outliers in financial and economic variables, and ensuring temporal alignment between macroeconomic indicators and GDP series
+gst["taxable_value"] = gst["taxable_value"].fillna(
+    gst["taxable_value"].median()
+)
 
-How you overcame the challenge
+cpi["inflation_rate"] = cpi["inflation_rate"].fillna(
+    cpi["inflation_rate"].mean()
+)
 
-These challenges were addressed through structured data engineering steps including SQL based extraction from multiple official data sources, standardization of sector and time dimensions, imputation techniques such as median filling and forward fill for missing values, statistical outlier detection using Z score and interquartile range methods, cross source reconciliation between GST and national accounts data, and careful time alignment using year and quarter based transformations
+Step 10: Duplicate Detection– ran code for all datasets 
 
-Skills tools and technologies used and why
+gst.duplicated().sum()
 
-The project used SQL for structured data extraction from government and corporate databases, Python for data processing and analytics, Pandas and NumPy for data manipulation and feature engineering, SQLAlchemy for database connectivity, Scikit learn for machine learning models, Statsmodels for ARIMA based time series forecasting, and XGBoost for advanced gradient boosting prediction due to its high accuracy in capturing non linear relationships. Random Forest was also used for robust ensemble based forecasting, and data visualization tools were used for interpretation and reporting
+Step 11: Remove Duplicates / business requirement is to keep only one record per GSTIN  
 
-Limitations of this project
+gst = gst.drop_duplicates()
+gst = gst.drop_duplicates(
+    subset=["GSTIN"],
+    keep="first"
+)
 
-The project is limited by data availability delays in official statistics, potential mismatches between survey based and transactional datasets, assumption based alignment between different economic indicators, sensitivity of machine learning models to structural economic changes, and reduced accuracy during extreme economic shocks where historical patterns may not hold
+Step 12: Data Type Conversion- – ran code for all datasets 
 
-Analytics performed
+gst["filing_period"] = pd.to_datetime(
+    gst["filing_period"]
+)
 
-The analytics included data extraction and integration from multiple macroeconomic sources, missing value analysis and imputation, duplicate removal, statistical outlier detection using Z score and IQR methods, correlation analysis between GST turnover and GVA, computation of consistency ratios between administrative and national accounts data, feature engineering using lag variables and rolling statistics, GDP growth rate computation, inflation adjustment to derive real GDP, and time series forecasting using ARIMA along with machine learning models such as Random Forest and XGBoost
+nas["year"] = nas["year"].astype(str)
 
-Key outcomes of the project
+Step 13: Outlier Detection (IQR)- – ran code for all datasets 
 
-The project successfully developed a unified macroeconomic dataset for GDP estimation, improved data consistency across sources, identified strong correlations between GST based activity and official GVA estimates, generated inflation adjusted real GDP measures, built multiple forecasting models for comparative evaluation, and enabled more reliable short term GDP prediction using integrated economic indicators
+Q1 = gst["taxable_value"].quantile(0.25)
+Q3 = gst["taxable_value"].quantile(0.75)
 
-Explanation of the project in one paragraph
+IQR = Q3 - Q1
 
-This project builds an integrated GDP estimation and forecasting system by combining multiple official economic datasets including national accounts GST filings industrial production household consumption labour market indicators inflation indices trade statistics and government expenditure data. The data is extracted using SQL then cleaned through missing value treatment duplicate removal and outlier handling followed by feature engineering to create lag and rolling indicators. After integrating all datasets into a unified macroeconomic framework the project applies statistical analysis correlation studies and machine learning models including Random Forest XGBoost and ARIMA to estimate and forecast GDP trends. The final output is a structured analytical pipeline that supports both real GDP estimation and future economic forecasting
+lower = Q1 - 1.5 * IQR
+upper = Q3 + 1.5 * IQR
 
-Conclusion of the project
+outliers = gst[
+    (gst["taxable_value"] < lower) |
+    (gst["taxable_value"] > upper)
+]
 
-The project demonstrates a comprehensive data driven approach to GDP estimation by integrating traditional statistical methods with modern machine learning techniques. It highlights how diverse macroeconomic indicators can be combined into a single analytical framework to improve the accuracy and interpretability of GDP forecasting. The approach enhances understanding of economic dynamics and provides a scalable foundation for policy oriented economic analysis and future forecasting systems
+Step 14: Data Integration
 
-# Drill questions
+gdp_df = (
+    nas
+    .merge(
+        gst,
+        on=["state_code"],
+        how="left"
+    )
+)
+Multiple datasets:
+gdp_df = (
+    nas
+    .merge(gst, on="state_code")
+    .merge(asi, on="state_code")
+    .merge(hces, on="state_code")
+)
 
-DATA SOURCES AND MACRO FOUNDATION
+Step 15: Feature Engineering
 
-What are the core data sources used in this GDP estimation framework?
+gdp_df["gst_growth"] = (
+    gdp_df["total_turnover"].pct_change()
+)
 
-The framework integrates multiple official and high-frequency macroeconomic datasets including National Accounts Statistics for GDP and GVA, GST returns for business turnover, Annual Survey of Industries for industrial output, Household Consumption Survey for demand-side estimation, PLFS for labour market indicators, IIP for industrial production trends, CPI and WPI for inflation measurement, external trade statistics for exports and imports, and government expenditure data for fiscal contribution. These sources together provide both production side and expenditure side coverage for GDP estimation.
+gdp_df["consumption_growth"] = (
+    gdp_df["total_consumption"].pct_change()
+)
 
-Why is it important to combine multiple datasets instead of relying only on National Accounts?
+Step 16: Exploratory Data Analysis
 
-National Accounts provide structured GDP estimates but are released with a time lag. Combining GST, IIP, CPI, trade, and other high-frequency indicators improves nowcasting accuracy, enables early estimation, and reduces dependency on lagged official releases. It also improves robustness through cross-validation across independent economic signals.
+gdp_df.describe()
 
-SQL DATA EXTRACTION LAYER
+gdp_df.corr(numeric_only=True)
 
-What is the role of the NAS dataset in the SQL layer?
+Step 17: Prepare Data for ARIMA
 
-The NAS dataset acts as the backbone of GDP estimation, providing sector-wise Gross Value Added and GDP at both current and constant prices. It serves as the dependent reference dataset that other indicators like GST turnover, industrial output, and consumption are aligned with for modeling and integration.
+ARIMA works only on the target time-series (GDP values).
+gdp_series = gdp_df["gdp_current_prices"]
+Step 18: Train-Test Split for ARIMA (Chronological Split)
+Since ARIMA is a Time Series model, we do not use train_test_split().
+train = gdp_series[:-5]
+test = gdp_series[-5:]
 
-Why is sector_code and quarter important in NAS extraction?
+Explanation
+•	Training Data = All historical GDP values except the last 5 periods.
+•	Test Data = Last 5 periods.
+•	Maintains chronological order.
 
-Sector_code allows classification of economic activity into agriculture, manufacturing, and services, enabling structural GDP breakdown. Quarter enables time-based analysis of economic growth trends and alignment with higher-frequency datasets like GST and IIP.
+Why did you keep the last 5 periods as test data?
 
-What does GST turnover represent in GDP estimation?
+The last 5 periods simulate future unseen data. This allows us to evaluate how well the model predicts upcoming GDP values.
 
-GST turnover represents aggregated taxable business activity across sectors and states. It serves as a proxy for real-time economic activity and helps track consumption and production trends before official GDP release.
+Step 19: ARIMA Model Training
 
-Why is GROUP BY used in GST aggregation?
+from statsmodels.tsa.arima.model import ARIMA
 
-GROUP BY is used to aggregate transaction-level GST data into meaningful macro-level indicators such as sector-wise and month-wise turnover and tax collection, which are necessary for GDP modeling and comparability with NAS data.
+model = ARIMA(
+    train,
+    order=(2,1,2)
+)
 
-DATA INTEGRATION LAYER
+result = model.fit()
 
-How are multiple datasets combined in the final GDP dataset?
+Explanation
+•	p = 2 → Auto-Regressive terms
+•	d = 1 → Differencing
+•	q = 2 → Moving Average terms
 
-Datasets are integrated using LEFT JOIN operations on common keys such as year, sector, and time period. NAS acts as the primary table, while GST, ASI, HCES, PLFS, IIP, CPI, WPI, trade, and government expenditure are merged to create a unified macroeconomic dataset.
+Explanation: 
 
-Why is LEFT JOIN preferred instead of INNER JOIN?
+How did you choose ARIMA(2,1,2)? What do p, d, q mean?
+Meaning of p, d, q
+ARIMA(p,d,q)
 
-LEFT JOIN ensures all GDP baseline observations from NAS are retained even if some auxiliary datasets have missing values. This is critical in macroeconomic data where survey frequency and reporting timelines differ.
+1. p = Auto-Regressive (AR) Term
+•	Number of past observations used to predict the current value.
+•	p = 2 means the model uses GDP values from the previous 2 periods.
 
-What is the significance of aligning monthly data like IIP, CPI, and WPI with annual GDP?
+2. d = Differencing Order
+•	Used to make the time series stationary.
+•	Removes trend and non-stationarity.
 
-Monthly indicators are converted into yearly alignment using YEAR() function to ensure consistency with GDP reporting frequency. This allows high-frequency signals to be used in annual GDP estimation models.
+3. q = Moving Average (MA) Term
+•	Uses past forecast errors to improve future predictions.
+•	q = 2 means the model considers the previous two error terms.
 
-DATA CLEANING AND PREPROCESSING
+How did you choose p=2, d=1, q=2?
 
-Why is missing value treatment necessary in macroeconomic datasets?
+I first checked whether the GDP data had a trend over time. Since it was increasing over the years, I applied first-order differencing (d=1) to make the data stable. Then I tried different ARIMA parameter combinations and selected ARIMA(2,1,2). 
+Step 20: ARIMA Forecasting
+forecast = result.forecast(steps=5)
 
-Macroeconomic datasets often contain missing values due to survey delays or reporting gaps. Handling them ensures model stability and prevents bias in GDP estimation.
+Explanation: 
 
-What is the difference between median imputation and forward fill?
+After training the ARIMA model, I used forecast(steps=5) to generate predictions for the next 5 time periods. The model used historical GDP patterns and trends to estimate future GDP values."
 
-Median imputation is used for skewed distributions like GVA to reduce outlier impact, while forward fill is used in time-series macro indicators to maintain continuity in economic trends.
+Step 21: ARIMA Evaluation
 
-Why is duplicate removal important in GST and household data?
+from sklearn.metrics import (
+    mean_absolute_percentage_error,
+    mean_squared_error
+)
 
-Duplicates can inflate turnover or consumption estimates artificially. Removing duplicates ensures each economic unit contributes only once, maintaining data integrity for GDP modeling.
+arima_mape = mean_absolute_percentage_error(
+    test,
+    forecast
+)
 
-OUTLIER DETECTION
+arima_rmse = mean_squared_error(
+    test,
+    forecast
+) ** 0.5
 
-Why is Z-score used for outlier detection in GDP data?
+print(arima_mape)
+print(arima_rmse)
 
-Z-score measures how far a value deviates from the mean in terms of standard deviations. It helps identify abnormal economic observations such as extreme GVA spikes that may distort model training.
+Step 22: Prepare Features for Random Forest
 
-Why is IQR method also used for GST data?
+X = gdp_df[
+    [
+        "total_turnover",
+        "gva",
+        "total_consumption",
+        "cpi_index"
+    ]
+]
 
-IQR is robust to skewed distributions commonly seen in financial transaction data. It removes extreme GST values that are not representative of normal economic activity.
+y = gdp_df["gdp_current_prices"]
 
-CROSS-SOURCE RECONCILIATION
+Explanation
 
-What is the purpose of comparing GST turnover with GVA?
+Features:
+•	GST Turnover
+•	Gross Value Added (GVA)
+•	Consumption
+•	CPI
 
-It helps validate whether tax-based economic activity aligns with official production-based GDP estimates. It is used to detect structural inconsistencies between informal and formal economic signals.
+Target:
+•	GDP
 
-What is consistency_ratio in this project?
+Step 23: Train-Test Split for Random Forest
 
-Consistency_ratio is defined as GST taxable value divided by GVA at constant prices. It measures alignment between transaction-level economic activity and official output estimates.
+from sklearn.model_selection import train_test_split
 
-FEATURE ENGINEERING
+X_train, X_test, y_train, y_test = train_test_split(
+    X,
+    y,
+    test_size=0.2,
+    random_state=42
+)
 
-What are lag features in macroeconomic forecasting?
+Explanation
+•	80% Training Data
+•	20% Testing Data
 
-Lag features such as lag_1 and lag_4 capture historical dependency in economic indicators like IIP. They help models learn temporal relationships and cyclical patterns in economic activity.
+Step 24: Train Random Forest Model
 
-Why is rolling mean used?
+from sklearn.ensemble import RandomForestRegressor
 
-Rolling mean smooths short-term volatility in indicators like IIP and highlights underlying economic trends, improving model stability.
+rf = RandomForestRegressor(
+    n_estimators=100,
+    random_state=42
+)
 
-Why is rolling standard deviation used?
+rf.fit(
+    X_train,
+    y_train
+)
 
-It measures volatility in industrial output, helping models capture economic uncertainty and fluctuations.
+Step 25: Random Forest Prediction
 
-TIME SERIES MODELING
+y_pred = rf.predict(
+    X_test
+)
 
-What is the role of ARIMA in GDP forecasting?
+Step 26: Random Forest Evaluation
 
-ARIMA is used for univariate time-series forecasting of GDP based on past values, trends, and error terms. It is effective for capturing linear temporal dependencies.
+rf_mape = mean_absolute_percentage_error(
+    y_test,
+    y_pred
+)
 
-What do ARIMA(2,1,2) parameters mean?
+rf_rmse = mean_squared_error(
+    y_test,
+    y_pred
+) ** 0.5
 
-2 autoregressive terms capture dependency on past GDP values
-1 differencing step ensures stationarity
-2 moving average terms capture past forecast errors
+print(rf_mape)
+print(rf_rmse)
 
-MACHINE LEARNING MODELING
+Step 27: Tableau / Power BI Dashboard
 
-Why is Random Forest used in GDP estimation?
+How I Connected the Final Dataset to Tableau & Power BI
 
-Random Forest captures non-linear relationships between macroeconomic indicators and GDP. It is robust to noise and works well with mixed structured economic data.
+After completing data cleaning, feature engineering, and forecasting, I exported the final dataset:
+gdp_df.to_csv(
+    "GDP_Dashboard_Data.csv",
+    index=False
+)
 
-Why is XGBoost preferred over traditional regression models?
+How I Connected the Final Dataset to Tableau & Power BI
 
-XGBoost improves prediction accuracy through gradient boosting, sequential error correction, and regularization, making it highly effective for complex macroeconomic relationships.
+After completing data cleaning, feature engineering, and forecasting, I exported the final dataset:
+gdp_df.to_csv(
+    "GDP_Dashboard_Data.csv",
+    index=False
+)
 
-What are key features used in GDP prediction model?
+Tableau Dashboard Development Steps
 
-Key features include IIP index, CPI, exports, imports, lagged IIP values, and rolling averages. These represent production, inflation, trade, and temporal dynamics.
+Step 1: Connect Data Source
+•	Open Tableau Desktop
+•	Click Connect → Text File
+•	Select GDP_Dashboard_Data.csv
 
-Why is train-test split done with shuffle=False?
+Power BI Dashboard Development Steps
 
-Because GDP data is time series, shuffling would break temporal order. Preserving sequence ensures realistic forecasting conditions.
+Step 1: Import Data
+•	Open Power BI Desktop
+•	Get Data → CSV
+•	Import GDP_Dashboard_Data.csv
 
-MODEL EVALUATION
+You built both Tableau and Power BI dashboards on the same GDP project. Why did you create different dashboards instead of replicating the same visualizations?
 
-How do you evaluate GDP forecasting models?
+Tableau Dashboard Development 
 
-Models are evaluated using prediction accuracy on test data, typically using metrics like RMSE, MAE, and MAPE to measure deviation from actual GDP values.
+I used Tableau for exploratory analysis, forecasting, and trend visualization. I created three dashboards: a GDP Forecasting Dashboard to analyze Year-wise and Quarter-wise GDP trends, GDP Growth %, and ARIMA forecasted GDP values; an Economic Driver Analysis Dashboard to study the impact of GST Turnover, GVA, Consumption Growth, and CPI on GDP using correlation and trend analysis; and a State-wise Economic Analysis Dashboard to compare GDP, GST Collection, Consumption Expenditure, and Inflation Rate across states. Tableau helped me create interactive visualizations, forecasting views, and geographical analysis for deeper economic insights.
 
-Why compare ARIMA, Random Forest, and XGBoost?
+Power BI Dashboard Development 
 
-ARIMA captures linear time dependency, Random Forest captures non-linear interactions, and XGBoost provides optimized gradient boosting performance. Comparing them ensures selection of the best forecasting model.
+I used Power BI for executive reporting and KPI monitoring. I developed three dashboards: an Executive Economic Performance Dashboard containing Total GDP, GDP Growth %, Total GVA, Total Consumption, Inflation Rate, and Forecast GDP; a Sector Performance Dashboard analyzing Manufacturing, Services, and Agriculture GVA along with Sector Contribution %; and a Tax & Consumption Dashboard focusing on GST Collection, GST Growth %, Rural Consumption, Urban Consumption, and Category-wise Consumption. Power BI's DAX measures and KPI-focused reporting made it ideal for management-level decision-making and performance tracking.
 
-ECONOMIC INTERPRETATION
+I used Tableau for analytical exploration and forecasting, while Power BI was used for executive reporting, KPI monitoring, and business decision support.
 
-What is the significance of CPI and WPI in GDP estimation?
+Interview Summary (Project Flow):
 
-CPI reflects consumer-level inflation, while WPI reflects producer-level inflation. Both are used to deflate nominal GDP into real GDP for inflation-adjusted analysis.
-
-What is real GDP in this project?
-
-Real GDP is calculated by adjusting nominal GVA using CPI to remove inflation effects, providing true economic growth measurement.
-
-FINAL INTERVIEW-LEVEL QUESTION
-
-How does this entire pipeline simulate real government GDP estimation systems?
-
-This pipeline replicates official statistical frameworks by integrating production-side (ASI, IIP), consumption-side (HCES), financial (MCA-21), fiscal (government expenditure), trade, inflation, and high-frequency tax data (GST). It applies cleaning, reconciliation, feature engineering, and forecasting models to build an integrated macroeconomic system similar to national statistical office methodologies for GDP nowcasting and forecasting.
+SQL → Data Extraction → Python (Cleaning, Missing Values, Duplicates, Outliers, Integration) → EDA → Feature Engineering → ARIMA/Random Forest Forecasting → Model Evaluation → Tableau/Power BI Dashboard Creation.
 
                                             *****
